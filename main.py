@@ -1,3 +1,4 @@
+from select import select
 from this import d
 from scipy import rand
 import torch
@@ -126,26 +127,18 @@ class GCN(torch.nn.Module):
         self.linear1 = nn.Linear(60, 30)
         self.linear2 = nn.Linear(30,17)
 
-        self.conv1 = make_conv_layer(220, 220)
-        self.conv2 = make_conv_layer(220, 150)
-        
-        self.conv_skip_1 = make_conv_layer(220, 150)
-        self.conv_skip_2 = make_conv_layer(150, 60)
-        
+        self.conv1 = make_conv_layer(220, 150)
+        self.conv2 = make_conv_layer(150, 100)
 
-        self.conv3 = make_conv_layer(150, 100)
-        self.conv4 = make_conv_layer(100, 60)
-        self.conv5 = make_conv_layer(60, 30)
-        self.conv6 = make_conv_layer(30, 10)
-        self.batch_norm1 = BatchNorm(220, eps=1e-5, momentum=0.9)
-        self.batch_norm2 = BatchNorm(150, eps=1e-5, momentum=0.9)
-        self.batch_norm3 = BatchNorm(100, eps=1e-5, momentum=0.9)
-        self.batch_norm4 = BatchNorm(60, eps=1e-5, momentum=0.9)
-        self.batch_norm5 = BatchNorm(30, eps=1e-5, momentum=0.9)
+        self.conv3 = make_conv_layer(100, 60)
+        
+        self.batch_norm1 = BatchNorm(150, eps=1e-5, momentum=0.9)
+        self.batch_norm2 = BatchNorm(100, eps=1e-5, momentum=0.9)
+        self.batch_norm3 = BatchNorm(60, eps=1e-5, momentum=0.9)
+       
     def forward(self, data):
         x, edge_index = data.x, data.edge_index
-        identity = x
-
+        
         x = self.conv1(x, edge_index)
         x = self.batch_norm1(x)
         x = F.relu(x)
@@ -153,31 +146,15 @@ class GCN(torch.nn.Module):
         
         x = self.conv2(x, edge_index)
         x = self.batch_norm2(x)
-
-        identity = self.conv_skip_1(identity, edge_index)
-       
-        x += identity
-        
+      
         x = F.relu(x)
-        
-
         
         x = self.conv3(x, edge_index)
         x = self.batch_norm3(x)
-        x = F.relu(x)
         
-        x = self.conv4(x, edge_index)
-        x = self.batch_norm4(x)
-
-        #identity = self.conv_skip_2(identity, edge_index)
-
-        #x += identity
-        x = F.relu(x)
         
-        x = self.conv5(x, edge_index)
-        x = F.relu(x)
-        x = self.batch_norm5(x)
-        x = self.conv6(x, edge_index)
+        
+        
         return F.log_softmax(x, dim=1)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -198,7 +175,7 @@ number_of_spectra = len(training_spectra)
 n = 0
 
 spectra_number_list = training_spectra
-number_of_spectra = 30
+number_of_spectra = 145
 spectra_number_list = list(range(number_of_spectra))
 
 for epoch in pbar:
