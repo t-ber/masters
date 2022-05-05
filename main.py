@@ -57,13 +57,17 @@ class GCN(torch.nn.Module):
         super().__init__()
         """super(GCN, self).__init__()"""
 
-
-        self.hidden = GConvGRU(220, 220, 1)
+        self.rnn = nn.RNN(60, 30, 1)
         
+        self.hidden_size = 30
 
-        self.linear1 = nn.Linear(60, 60)
-        self.linear2 = nn.Linear(60, 30)
-        self.linear3 = nn.Linear(30, 4)
+        self.h_0 = torch.zeros(1, 3, 30).to(device)
+
+        self.hidden = nn.Linear(60 + self.hidden_size, self.hidden_size)
+
+        self.linear1 = nn.Linear(30, 30)
+        self.linear2 = nn.Linear(30, 15)
+        self.linear3 = nn.Linear(15, 4)
 
         self.conv1 = make_conv_layer(220, 150)
         self.conv2 = make_conv_layer(150, 60)
@@ -72,9 +76,9 @@ class GCN(torch.nn.Module):
         
         self.batch_norm1 = BatchNorm(150, eps=1e-5, momentum=0.9)
         self.batch_norm2 = BatchNorm(60, eps=1e-5, momentum=0.9)
-        self.batch_norm3 = BatchNorm(60, eps=1e-5, momentum=0.9)
+        self.batch_norm3 = BatchNorm(30, eps=1e-5, momentum=0.9)
        
-    def forward(self, data, hidden):
+    def forward(self, data):
         x, edge_index = data.x, data.edge_index
         
         x = self.conv1(x, edge_index)
@@ -85,16 +89,21 @@ class GCN(torch.nn.Module):
         x = self.conv2(x, edge_index)
         x = self.batch_norm2(x)
 
-        combined = torch.cat((x, hidden)
-        hidden = x
+        
 
-        x = F.relu(combined)
+        x = F.relu(x)
         
         #x = self.conv3(x, edge_index)
         #x = self.batch_norm3(x)
         
         #x = F.relu(x)
-
+        print(x.shape)
+        x = x.view(24, 3, 60)
+        
+        x, thing = self.rnn(x, self.h_0)
+        
+        x = x.view(72, 30)
+        
         x = self.linear1(x)
         x = self.batch_norm3(x)
         x = F.relu(x)
@@ -105,7 +114,7 @@ class GCN(torch.nn.Module):
         x = self.linear3(x)
         
         
-        return F.log_softmax(x, dim=1), hidden
+        return F.log_softmax(x, dim=1)
 
 
 

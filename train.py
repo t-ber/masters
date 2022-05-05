@@ -21,12 +21,12 @@ from torch_geometric_temporal.nn.recurrent import GConvGRU
 
 def load_dataset(name):
     datapath = 'data/' + name + '.mat'
-    ground_truth_path = 'data/' + name + '_class.mat'
+    ground_truth_path = 'data/' + name + '_gt.mat'
     raw_data = scipy.io.loadmat(datapath)
     ground_truth = scipy.io.loadmat(ground_truth_path)
-    #name = name.lower()
+    name = name.lower()
     dataset = raw_data[name] # use the key for data here
-    gt_key = name + '_class'
+    gt_key = name + '_gt'
     target = ground_truth[gt_key] # use the key for target here
 
     dataset = dataset.astype(int)
@@ -112,10 +112,13 @@ def make_test_data(raw_data, targets):
 def train_loop(data_loader, model, optimizer, device):
     size = len(data_loader.dataset)
     summed_loss = 0
+    hidden = torch.zeros(1, 30)
+    hidden = hidden.to(device)
     for batch, data in tqdm(enumerate(data_loader)):
-        data.to(device)
+        data = data.to(device)
         #pbar.set_description("Loss: %f" % loss)
-        out = model(data)
+        
+        out  = model(data)
         loss = F.nll_loss(out, data.y)
         summed_loss += loss
         """if loss < best_loss:
