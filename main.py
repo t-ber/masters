@@ -40,7 +40,7 @@ data, pca =applyPCA(data)
 
 train_data, train_targets = split_training_data(data, targets, 0.3)
 
-train_data = make_training_data(train_data, train_targets, 2, 0)
+train_data = make_training_data(train_data, train_targets, 15, 1)
 
 test_data = make_test_data(data, targets)
 
@@ -179,7 +179,7 @@ best_loss = 100
 times_no_new_best_loss = 0
 model.train()
 
-number_of_epochs = 50
+number_of_epochs = 100
 for i in range(number_of_epochs):
     avg_loss = train_loop(train_dataloader, model, optimizer, device)
     avg_loss = avg_loss.data.cpu().numpy()
